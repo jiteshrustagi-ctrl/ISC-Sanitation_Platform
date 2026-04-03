@@ -997,6 +997,233 @@ class LoginFeature extends StatelessWidget {
   }
 }
 
+class _DashboardDestination {
+  const _DashboardDestination({
+    required this.label,
+    required this.icon,
+    required this.selectedIcon,
+    required this.description,
+    required this.builder,
+  });
+
+  final String label;
+  final IconData icon;
+  final IconData selectedIcon;
+  final String description;
+  final Widget Function(PlatformController controller) builder;
+}
+
+class _ResponsivePage extends StatelessWidget {
+  const _ResponsivePage({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
+      children: [
+        Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1120),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: _withVerticalSpacing(children, 16),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AdaptiveFieldPair extends StatelessWidget {
+  const _AdaptiveFieldPair({required this.first, required this.second});
+
+  final Widget first;
+  final Widget second;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        if (constraints.maxWidth < 720) {
+          return Column(children: [first, const SizedBox(height: 12), second]);
+        }
+
+        return Row(
+          children: [
+            Expanded(child: first),
+            const SizedBox(width: 12),
+            Expanded(child: second),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _DashboardHero extends StatelessWidget {
+  const _DashboardHero({
+    required this.user,
+    required this.destination,
+    required this.controller,
+    required this.onSync,
+    required this.onLogout,
+    required this.compact,
+  });
+
+  final AppUser user;
+  final _DashboardDestination destination;
+  final PlatformController controller;
+  final Future<void> Function() onSync;
+  final VoidCallback onLogout;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      margin: EdgeInsets.fromLTRB(compact ? 16 : 20, 16, compact ? 16 : 20, 0),
+      padding: EdgeInsets.fromLTRB(
+        compact ? 18 : 24,
+        compact ? 18 : 24,
+        compact ? 18 : 24,
+        compact ? 18 : 22,
+      ),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: <Color>[Color(0xFF123B38), Color(0xFF2C756B)],
+        ),
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x24123B38),
+            blurRadius: 28,
+            offset: Offset(0, 14),
+          ),
+        ],
+      ),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1120),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 760),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'ISC Unified Sanitation Platform',
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w800,
+                              ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          '${user.displayName} • ${user.roleLabel} • ${user.organization}',
+                          style: const TextStyle(color: Colors.white70),
+                        ),
+                        const SizedBox(height: 14),
+                        Text(
+                          destination.label,
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w800,
+                              ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          destination.description,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: controller.isSyncing ? null : onSync,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          side: const BorderSide(color: Colors.white24),
+                        ),
+                        icon: const Icon(Icons.sync),
+                        label: Text(
+                          controller.isSyncing ? 'Syncing...' : 'Sync Now',
+                        ),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: onLogout,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          side: const BorderSide(color: Colors.white24),
+                        ),
+                        icon: const Icon(Icons.logout),
+                        label: const Text('Logout'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  HeaderChip(
+                    label: 'Blocks tracked',
+                    value: controller.blocks.length.toString(),
+                  ),
+                  HeaderChip(
+                    label: 'Pending sync',
+                    value: controller.pendingChanges.toString(),
+                  ),
+                  HeaderChip(
+                    label: 'Status',
+                    value: controller.isSyncing ? 'Syncing...' : 'Ready',
+                  ),
+                  HeaderChip(
+                    label: 'Last sync',
+                    value: formatDateTime(controller.lastSyncAt),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+List<Widget> _withVerticalSpacing(List<Widget> children, double spacing) {
+  final List<Widget> result = <Widget>[];
+  for (var index = 0; index < children.length; index++) {
+    if (index > 0) {
+      result.add(SizedBox(height: spacing));
+    }
+    result.add(children[index]);
+  }
+  return result;
+}
+
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({required this.controller, super.key});
 
@@ -1009,168 +1236,249 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   int _selectedIndex = 0;
 
+  List<_DashboardDestination> get _destinations => <_DashboardDestination>[
+    _DashboardDestination(
+      label: 'Overview',
+      icon: Icons.space_dashboard_outlined,
+      selectedIcon: Icons.space_dashboard,
+      description:
+          'Monitor headline sanitation metrics, funding snapshots, and impact coverage in one place.',
+      builder: (PlatformController controller) =>
+          OverviewPage(controller: controller),
+    ),
+    _DashboardDestination(
+      label: 'Block View',
+      icon: Icons.map_outlined,
+      selectedIcon: Icons.map,
+      description:
+          'Review every tracked block, including funding, focus areas, and implementation partners working there.',
+      builder: (PlatformController controller) =>
+          BlocksPage(controller: controller),
+    ),
+    _DashboardDestination(
+      label: 'Funding',
+      icon: Icons.account_balance_wallet_outlined,
+      selectedIcon: Icons.account_balance_wallet,
+      description:
+          'Compare modeled funding requirements against available CSR and government support.',
+      builder: (PlatformController controller) =>
+          FundingGapPage(controller: controller),
+    ),
+    _DashboardDestination(
+      label: 'Projects',
+      icon: Icons.task_alt_outlined,
+      selectedIcon: Icons.task_alt,
+      description:
+          'Track implementation projects, delivery status, budgets, and activity progress.',
+      builder: (PlatformController controller) =>
+          ProjectTrackerPage(controller: controller),
+    ),
+    _DashboardDestination(
+      label: 'Partners',
+      icon: Icons.handshake_outlined,
+      selectedIcon: Icons.handshake,
+      description:
+          'See implementation partner coverage and which blocks each partner is currently working in.',
+      builder: (PlatformController controller) =>
+          ImplementationPartnersPage(controller: controller),
+    ),
+    _DashboardDestination(
+      label: 'Reports',
+      icon: Icons.file_download_outlined,
+      selectedIcon: Icons.file_download,
+      description:
+          'Access report-ready summaries for ISC, CSR, government, and partner reviews.',
+      builder: (PlatformController controller) =>
+          ReportsExportPage(controller: controller),
+    ),
+    _DashboardDestination(
+      label: 'Users',
+      icon: Icons.manage_accounts_outlined,
+      selectedIcon: Icons.manage_accounts,
+      description:
+          'Manage role-based access for ISC teams, CSR funders, and government officers.',
+      builder: (PlatformController controller) =>
+          UserManagementPage(controller: controller),
+    ),
+    _DashboardDestination(
+      label: 'Performance',
+      icon: Icons.insights_outlined,
+      selectedIcon: Icons.insights,
+      description:
+          'Compare partner performance by block spread, villages covered, and households linked.',
+      builder: (PlatformController controller) =>
+          PartnerPerformancePage(controller: controller),
+    ),
+    _DashboardDestination(
+      label: 'Data Entry',
+      icon: Icons.edit_note_outlined,
+      selectedIcon: Icons.edit_note,
+      description:
+          'Capture field updates, budget allocations, and implementation notes from a mobile-friendly form.',
+      builder: (PlatformController controller) =>
+          DataEntryPage(controller: controller),
+    ),
+  ];
+
+  Future<void> _sync() async {
+    await widget.controller.sync();
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Platform data synced.')));
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = widget.controller.currentUser!;
-    final pages = <Widget>[
-      OverviewPage(controller: widget.controller),
-      BlocksPage(controller: widget.controller),
-      FundingGapPage(controller: widget.controller),
-      ProjectTrackerPage(controller: widget.controller),
-      ImplementationPartnersPage(controller: widget.controller),
-      ReportsExportPage(controller: widget.controller),
-      UserManagementPage(controller: widget.controller),
-      PartnerPerformancePage(controller: widget.controller),
-      DataEntryPage(controller: widget.controller),
-    ];
+    final destination = _destinations[_selectedIndex];
+    final selectedPage = destination.builder(widget.controller);
+    final width = MediaQuery.of(context).size.width;
+    final useRail = width >= 1040;
+    final extendRail = width >= 1360;
 
     return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: <Color>[Color(0xFF123B38), Color(0xFF2C756B)],
-                ),
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(28),
-                  bottomRight: Radius.circular(28),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+      appBar: useRail
+          ? null
+          : AppBar(
+              title: Text(destination.label),
+              backgroundColor: const Color(0xFFF2F5F2),
+            ),
+      drawer: useRail
+          ? null
+          : NavigationDrawer(
+              selectedIndex: _selectedIndex,
+              onDestinationSelected: (int value) {
+                setState(() => _selectedIndex = value);
+                Navigator.of(context).pop();
+              },
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(28, 20, 16, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'ISC Unified Sanitation Platform',
-                              style: Theme.of(context).textTheme.headlineSmall
-                                  ?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              '${user.displayName} • ${user.roleLabel} • ${user.organization}',
-                              style: const TextStyle(color: Colors.white70),
-                            ),
-                          ],
+                      Text(
+                        'ISC Platform',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
-                      IconButton(
-                        onPressed: widget.controller.isSyncing
-                            ? null
-                            : () async {
-                                await widget.controller.sync();
-                                if (!mounted) {
-                                  return;
-                                }
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Platform data synced.'),
+                      const SizedBox(height: 4),
+                      Text(
+                        user.roleLabel,
+                        style: const TextStyle(color: Colors.black54),
+                      ),
+                    ],
+                  ),
+                ),
+                ...List<Widget>.generate(_destinations.length, (int index) {
+                  final item = _destinations[index];
+                  return NavigationDrawerDestination(
+                    icon: Icon(item.icon),
+                    selectedIcon: Icon(item.selectedIcon),
+                    label: Text(item.label),
+                  );
+                }),
+              ],
+            ),
+      body: SafeArea(
+        top: useRail,
+        child: Row(
+          children: [
+            if (useRail)
+              Container(
+                width: extendRail ? 300 : 104,
+                margin: const EdgeInsets.fromLTRB(16, 16, 0, 16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(color: const Color(0xFFDDE6E2)),
+                ),
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        extendRail ? 24 : 12,
+                        20,
+                        extendRail ? 24 : 12,
+                        12,
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF123B38),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: const Icon(
+                              Icons.water_drop_outlined,
+                              color: Colors.white,
+                            ),
+                          ),
+                          if (extendRail) ...[
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'ISC Platform',
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.w800),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const Divider(height: 1),
+                    Expanded(
+                      child: NavigationRail(
+                        selectedIndex: _selectedIndex,
+                        onDestinationSelected: (int value) {
+                          setState(() => _selectedIndex = value);
+                        },
+                        extended: extendRail,
+                        minWidth: 88,
+                        minExtendedWidth: 280,
+                        labelType: extendRail
+                            ? NavigationRailLabelType.none
+                            : NavigationRailLabelType.all,
+                        backgroundColor: Colors.transparent,
+                        destinations: _destinations
+                            .map(
+                              (_DashboardDestination item) =>
+                                  NavigationRailDestination(
+                                    icon: Icon(item.icon),
+                                    selectedIcon: Icon(item.selectedIcon),
+                                    label: Text(item.label),
                                   ),
-                                );
-                              },
-                        icon: const Icon(Icons.sync, color: Colors.white),
+                            )
+                            .toList(),
                       ),
-                      IconButton(
-                        onPressed: widget.controller.logout,
-                        icon: const Icon(Icons.logout, color: Colors.white),
-                      ),
-                    ],
+                    ),
+                  ],
+                ),
+              ),
+            Expanded(
+              child: Column(
+                children: [
+                  _DashboardHero(
+                    user: user,
+                    destination: destination,
+                    controller: widget.controller,
+                    onSync: _sync,
+                    onLogout: widget.controller.logout,
+                    compact: !useRail,
                   ),
-                  const SizedBox(height: 16),
-                  Wrap(
-                    spacing: 10,
-                    runSpacing: 10,
-                    children: [
-                      HeaderChip(
-                        label: 'Blocks tracked',
-                        value: widget.controller.blocks.length.toString(),
-                      ),
-                      HeaderChip(
-                        label: 'Pending sync',
-                        value: widget.controller.pendingChanges.toString(),
-                      ),
-                      HeaderChip(
-                        label: 'Status',
-                        value: widget.controller.isSyncing
-                            ? 'Syncing...'
-                            : 'Ready',
-                      ),
-                      HeaderChip(
-                        label: 'Last sync',
-                        value: formatDateTime(widget.controller.lastSyncAt),
-                      ),
-                    ],
-                  ),
+                  Expanded(child: selectedPage),
                 ],
               ),
             ),
-            Expanded(child: pages[_selectedIndex]),
           ],
         ),
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedIndex,
-        onDestinationSelected: (int value) {
-          setState(() => _selectedIndex = value);
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.space_dashboard_outlined),
-            selectedIcon: Icon(Icons.space_dashboard),
-            label: 'Overview',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.map_outlined),
-            selectedIcon: Icon(Icons.map),
-            label: 'Block View',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.account_balance_wallet_outlined),
-            selectedIcon: Icon(Icons.account_balance_wallet),
-            label: 'Funding',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.task_alt_outlined),
-            selectedIcon: Icon(Icons.task_alt),
-            label: 'Projects',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.handshake_outlined),
-            selectedIcon: Icon(Icons.handshake),
-            label: 'Partners',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.file_download_outlined),
-            selectedIcon: Icon(Icons.file_download),
-            label: 'Reports',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.manage_accounts_outlined),
-            selectedIcon: Icon(Icons.manage_accounts),
-            label: 'Users',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.insights_outlined),
-            selectedIcon: Icon(Icons.insights),
-            label: 'Performance',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.edit_note_outlined),
-            selectedIcon: Icon(Icons.edit_note),
-            label: 'Data Entry',
-          ),
-        ],
       ),
     );
   }
@@ -1188,8 +1496,7 @@ class OverviewPage extends StatelessWidget {
           a.impactScore >= b.impactScore ? a : b,
     );
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
+    return _ResponsivePage(
       children: [
         Text(
           'One-view decision dashboard',
@@ -1323,12 +1630,8 @@ class BlocksPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: controller.blocks.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemBuilder: (BuildContext context, int index) {
-        final block = controller.blocks[index];
+    return _ResponsivePage(
+      children: controller.blocks.map((SanitationBlock block) {
         return Card(
           child: Padding(
             padding: const EdgeInsets.all(18),
@@ -1428,7 +1731,7 @@ class BlocksPage extends StatelessWidget {
             ),
           ),
         );
-      },
+      }).toList(),
     );
   }
 }
@@ -1443,8 +1746,7 @@ class ImplementationPartnersPage extends StatelessWidget {
     final List<ImplementationPartnerSummary> partners =
         controller.partnerSummaries;
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
+    return _ResponsivePage(
       children: [
         Card(
           child: Padding(
@@ -1568,8 +1870,7 @@ class FundingGapPage extends StatelessWidget {
       (double sum, FundingGapRecord record) => sum + record.gapLakhs,
     );
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
+    return _ResponsivePage(
       children: [
         Card(
           child: Padding(
@@ -1654,8 +1955,7 @@ class ProjectTrackerPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
+    return _ResponsivePage(
       children: [
         Card(
           child: Padding(
@@ -1728,8 +2028,7 @@ class ReportsExportPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
+    return _ResponsivePage(
       children: [
         Card(
           child: Padding(
@@ -1774,8 +2073,7 @@ class UserManagementPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
+    return _ResponsivePage(
       children: [
         Card(
           child: Padding(
@@ -1823,8 +2121,7 @@ class PartnerPerformancePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final partners = controller.partnerSummaries;
-    return ListView(
-      padding: const EdgeInsets.all(16),
+    return _ResponsivePage(
       children: [
         Card(
           child: Padding(
@@ -1964,8 +2261,7 @@ class _DataEntryPageState extends State<DataEntryPage> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
+    return _ResponsivePage(
       children: [
         Card(
           child: Padding(
@@ -2019,56 +2315,42 @@ class _DataEntryPageState extends State<DataEntryPage> {
                   },
                 ),
                 const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _allocatedController,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: const InputDecoration(
-                          labelText: 'Budget allocated (lakhs)',
-                        ),
-                      ),
+                _AdaptiveFieldPair(
+                  first: TextField(
+                    controller: _allocatedController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextField(
-                        controller: _utilizedController,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: const InputDecoration(
-                          labelText: 'Budget utilized (lakhs)',
-                        ),
-                      ),
+                    decoration: const InputDecoration(
+                      labelText: 'Budget allocated (lakhs)',
                     ),
-                  ],
+                  ),
+                  second: TextField(
+                    controller: _utilizedController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: const InputDecoration(
+                      labelText: 'Budget utilized (lakhs)',
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _householdsController,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Households impacted',
-                        ),
-                      ),
+                _AdaptiveFieldPair(
+                  first: TextField(
+                    controller: _householdsController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Households impacted',
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextField(
-                        controller: _assetsController,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Assets or sessions created',
-                        ),
-                      ),
+                  ),
+                  second: TextField(
+                    controller: _assetsController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Assets or sessions created',
                     ),
-                  ],
+                  ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
