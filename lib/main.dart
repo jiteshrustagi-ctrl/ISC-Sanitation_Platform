@@ -1020,8 +1020,14 @@ class _ResponsivePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final compact = _isCompactWidth(context);
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
+      padding: EdgeInsets.fromLTRB(
+        compact ? 12 : 16,
+        compact ? 12 : 16,
+        compact ? 12 : 16,
+        compact ? 20 : 28,
+      ),
       children: [
         Center(
           child: ConstrainedBox(
@@ -1033,6 +1039,35 @@ class _ResponsivePage extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _AdaptiveHeaderWithChip extends StatelessWidget {
+  const _AdaptiveHeaderWithChip({required this.title, required this.chip});
+
+  final Widget title;
+  final Widget chip;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        if (constraints.maxWidth < 640) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [title, const SizedBox(height: 8), chip],
+          );
+        }
+
+        return Row(
+          children: [
+            Expanded(child: title),
+            const SizedBox(width: 12),
+            chip,
+          ],
+        );
+      },
     );
   }
 }
@@ -1082,14 +1117,21 @@ class _DashboardHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final titleTheme = Theme.of(context).textTheme;
+
     return Container(
       width: double.infinity,
-      margin: EdgeInsets.fromLTRB(compact ? 16 : 20, 16, compact ? 16 : 20, 0),
+      margin: EdgeInsets.fromLTRB(
+        compact ? 16 : 20,
+        compact ? 12 : 16,
+        compact ? 16 : 20,
+        0,
+      ),
       padding: EdgeInsets.fromLTRB(
-        compact ? 18 : 24,
-        compact ? 18 : 24,
-        compact ? 18 : 24,
-        compact ? 18 : 22,
+        compact ? 16 : 18,
+        compact ? 16 : 16,
+        compact ? 16 : 18,
+        compact ? 16 : 16,
       ),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -1107,106 +1149,218 @@ class _DashboardHero extends StatelessWidget {
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1120),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Wrap(
-                alignment: WrapAlignment.spaceBetween,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                spacing: 12,
-                runSpacing: 12,
-                children: [
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 760),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+          child: compact
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
-                        Text(
-                          'ISC Unified Sanitation Platform',
-                          style: Theme.of(context).textTheme.headlineSmall
-                              ?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w800,
-                              ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          '${user.displayName} • ${user.roleLabel} • ${user.organization}',
-                          style: const TextStyle(color: Colors.white70),
-                        ),
-                        const SizedBox(height: 14),
-                        Text(
-                          destination.label,
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w800,
-                              ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          destination.description,
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            height: 1.4,
+                        Expanded(
+                          child: Text(
+                            destination.label,
+                            style: titleTheme.titleLarge?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
+                        ),
+                        _CompactHeroAction(
+                          icon: controller.isSyncing
+                              ? Icons.hourglass_top
+                              : Icons.sync,
+                          tooltip: controller.isSyncing ? 'Syncing' : 'Sync',
+                          onTap: controller.isSyncing ? null : () => onSync(),
+                        ),
+                        const SizedBox(width: 8),
+                        _CompactHeroAction(
+                          icon: Icons.logout,
+                          tooltip: 'Logout',
+                          onTap: onLogout,
                         ),
                       ],
                     ),
-                  ),
-                  Wrap(
-                    spacing: 10,
-                    runSpacing: 10,
-                    children: [
-                      OutlinedButton.icon(
-                        onPressed: controller.isSyncing ? null : onSync,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          side: const BorderSide(color: Colors.white24),
-                        ),
-                        icon: const Icon(Icons.sync),
-                        label: Text(
-                          controller.isSyncing ? 'Syncing...' : 'Sync Now',
-                        ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${user.displayName} • ${user.roleLabel}',
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 13,
                       ),
-                      OutlinedButton.icon(
-                        onPressed: onLogout,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          side: const BorderSide(color: Colors.white24),
-                        ),
-                        icon: const Icon(Icons.logout),
-                        label: const Text('Logout'),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      destination.description,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 13,
+                        height: 1.35,
                       ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: [
-                  HeaderChip(
-                    label: 'Blocks tracked',
-                    value: controller.blocks.length.toString(),
-                  ),
-                  HeaderChip(
-                    label: 'Pending sync',
-                    value: controller.pendingChanges.toString(),
-                  ),
-                  HeaderChip(
-                    label: 'Status',
-                    value: controller.isSyncing ? 'Syncing...' : 'Ready',
-                  ),
-                  HeaderChip(
-                    label: 'Last sync',
-                    value: formatDateTime(controller.lastSyncAt),
-                  ),
-                ],
-              ),
-            ],
+                    ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        HeaderChip(
+                          label: 'Blocks',
+                          value: controller.blocks.length.toString(),
+                          compact: true,
+                        ),
+                        HeaderChip(
+                          label: 'Pending',
+                          value: controller.pendingChanges.toString(),
+                          compact: true,
+                        ),
+                        HeaderChip(
+                          label: 'Status',
+                          value: controller.isSyncing ? 'Syncing' : 'Ready',
+                          compact: true,
+                        ),
+                        HeaderChip(
+                          label: 'Last sync',
+                          value: formatDateTime(controller.lastSyncAt),
+                          compact: true,
+                        ),
+                      ],
+                    ),
+                  ],
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 760),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'ISC Unified Sanitation Platform',
+                                  style: titleTheme.headlineSmall?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 27,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '${user.displayName} • ${user.roleLabel} • ${user.organization}',
+                                  style: const TextStyle(color: Colors.white70),
+                                ),
+                                const SizedBox(height: 10),
+                                Text(
+                                  destination.label,
+                                  style: titleTheme.titleLarge?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  destination.description,
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    height: 1.35,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            OutlinedButton.icon(
+                              onPressed: controller.isSyncing ? null : onSync,
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.white,
+                                side: const BorderSide(color: Colors.white24),
+                              ),
+                              icon: const Icon(Icons.sync),
+                              label: Text(
+                                controller.isSyncing
+                                    ? 'Syncing...'
+                                    : 'Sync Now',
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            OutlinedButton.icon(
+                              onPressed: onLogout,
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.white,
+                                side: const BorderSide(color: Colors.white24),
+                              ),
+                              icon: const Icon(Icons.logout),
+                              label: const Text('Logout'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: [
+                        HeaderChip(
+                          label: 'Blocks tracked',
+                          value: controller.blocks.length.toString(),
+                        ),
+                        HeaderChip(
+                          label: 'Pending sync',
+                          value: controller.pendingChanges.toString(),
+                        ),
+                        HeaderChip(
+                          label: 'Status',
+                          value: controller.isSyncing ? 'Syncing...' : 'Ready',
+                        ),
+                        HeaderChip(
+                          label: 'Last sync',
+                          value: formatDateTime(controller.lastSyncAt),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CompactHeroAction extends StatelessWidget {
+  const _CompactHeroAction({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.white24),
           ),
+          child: Icon(icon, color: Colors.white, size: 20),
         ),
       ),
     );
@@ -1343,8 +1497,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       appBar: useRail
           ? null
           : AppBar(
-              title: Text(destination.label),
-              backgroundColor: const Color(0xFFF2F5F2),
+              title: const Text('ISC Platform'),
+              foregroundColor: Colors.white,
+              backgroundColor: const Color(0xFF123B38),
+              elevation: 0,
+              toolbarHeight: 60,
             ),
       drawer: useRail
           ? null
@@ -1498,17 +1655,44 @@ class OverviewPage extends StatelessWidget {
 
     return _ResponsivePage(
       children: [
-        Text(
-          'One-view decision dashboard',
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+        Container(
+          padding: EdgeInsets.all(_isCompactWidth(context) ? 16 : 20),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: <Color>[Color(0xFF123B38), Color(0xFF2C756B)],
+            ),
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'One-view decision dashboard',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Designed for ISC, CSR organizations, and government agencies to review funding, implementation coverage, and impact from a shared dashboard.',
+                style: TextStyle(color: Colors.white70, height: 1.45),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: const [
+                  _ThemeBadge(label: 'Funding clarity'),
+                  _ThemeBadge(label: 'Block intelligence'),
+                  _ThemeBadge(label: 'Partner coverage'),
+                ],
+              ),
+            ],
+          ),
         ),
-        const SizedBox(height: 8),
-        const Text(
-          'Designed from the ISC requirement to support CSR organizations and government agencies with shared clarity on funding, implementation, and impact at block level.',
-        ),
-        const SizedBox(height: 16),
         LayoutBuilder(
           builder: (BuildContext context, BoxConstraints constraints) {
             final wide = constraints.maxWidth > 900;
@@ -1564,7 +1748,7 @@ class OverviewPage extends StatelessWidget {
         const SizedBox(height: 16),
         Card(
           child: Padding(
-            padding: const EdgeInsets.all(18),
+            padding: EdgeInsets.all(_isCompactWidth(context) ? 16 : 18),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1590,32 +1774,40 @@ class OverviewPage extends StatelessWidget {
                   spacing: 8,
                   runSpacing: 8,
                   children: topBlock.focusAreas
-                      .map((String item) => Chip(label: Text(item)))
+                      .map(
+                        (String item) => Chip(
+                          backgroundColor: const Color(0xFFE4F2EE),
+                          label: Text(item),
+                        ),
+                      )
                       .toList(),
                 ),
               ],
             ),
           ),
         ),
-        const SizedBox(height: 16),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Platform coverage',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+        Container(
+          padding: EdgeInsets.all(_isCompactWidth(context) ? 16 : 18),
+          decoration: BoxDecoration(
+            color: const Color(0xFFEAF4F0),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: const Color(0xFFD7E9E3)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Platform coverage',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: const Color(0xFF123B38),
+                  fontWeight: FontWeight.w800,
                 ),
-                const SizedBox(height: 12),
-                const Text(
-                  'ISC updates block-level implementation data. CSR organizations enter area-wise budgets and implementation partners. Government users add scheme-linked allocations to create a unified clarity layer for decision-making.',
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                'ISC updates block-level implementation data. CSR organizations enter area-wise budgets and implementation partners. Government users add scheme-linked allocations to create a unified clarity layer for decision-making.',
+              ),
+            ],
           ),
         ),
       ],
@@ -1634,7 +1826,7 @@ class BlocksPage extends StatelessWidget {
       children: controller.blocks.map((SanitationBlock block) {
         return Card(
           child: Padding(
-            padding: const EdgeInsets.all(18),
+            padding: EdgeInsets.all(_isCompactWidth(context) ? 16 : 18),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1646,26 +1838,23 @@ class BlocksPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${block.block}, ${block.district}',
-                            style: Theme.of(context).textTheme.titleLarge
-                                ?.copyWith(fontWeight: FontWeight.w800),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${block.state} • ${block.gramPanchayats} GPs • ${block.villagesCovered} villages',
-                          ),
-                        ],
+                _AdaptiveHeaderWithChip(
+                  title: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${block.block}, ${block.district}',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
-                    ),
-                    Chip(label: Text('Impact ${block.impactScore}')),
-                  ],
+                      const SizedBox(height: 4),
+                      Text(
+                        '${block.state} • ${block.gramPanchayats} GPs • ${block.villagesCovered} villages',
+                      ),
+                    ],
+                  ),
+                  chip: Chip(label: Text('Impact ${block.impactScore}')),
                 ),
                 const SizedBox(height: 14),
                 Text(
@@ -1772,21 +1961,20 @@ class ImplementationPartnersPage extends StatelessWidget {
         ...partners.map(
           (ImplementationPartnerSummary partner) => Card(
             child: Padding(
-              padding: const EdgeInsets.all(18),
+              padding: EdgeInsets.all(_isCompactWidth(context) ? 16 : 18),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          partner.name,
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(fontWeight: FontWeight.w800),
-                        ),
+                  _AdaptiveHeaderWithChip(
+                    title: Text(
+                      partner.name,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
                       ),
-                      Chip(label: Text('${partner.blocks.length} block(s)')),
-                    ],
+                    ),
+                    chip: Chip(
+                      label: Text('${partner.blocks.length} block(s)'),
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Wrap(
@@ -1896,27 +2084,24 @@ class FundingGapPage extends StatelessWidget {
         ...records.map(
           (FundingGapRecord record) => Card(
             child: Padding(
-              padding: const EdgeInsets.all(18),
+              padding: EdgeInsets.all(_isCompactWidth(context) ? 16 : 18),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          '${record.block.block}, ${record.block.district}',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w800),
-                        ),
+                  _AdaptiveHeaderWithChip(
+                    title: Text(
+                      '${record.block.block}, ${record.block.district}',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
                       ),
-                      Chip(
-                        label: Text(
-                          record.needsAttention
-                              ? 'Gap ${formatLakhs(record.gapLakhs)} L'
-                              : 'Covered',
-                        ),
+                    ),
+                    chip: Chip(
+                      label: Text(
+                        record.needsAttention
+                            ? 'Gap ${formatLakhs(record.gapLakhs)} L'
+                            : 'Covered',
                       ),
-                    ],
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Wrap(
@@ -1981,21 +2166,18 @@ class ProjectTrackerPage extends StatelessWidget {
         ...controller.projects.map(
           (ActivityProject project) => Card(
             child: Padding(
-              padding: const EdgeInsets.all(18),
+              padding: EdgeInsets.all(_isCompactWidth(context) ? 16 : 18),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          project.name,
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w800),
-                        ),
+                  _AdaptiveHeaderWithChip(
+                    title: Text(
+                      project.name,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
                       ),
-                      Chip(label: Text(projectStatusLabel(project.status))),
-                    ],
+                    ),
+                    chip: Chip(label: Text(projectStatusLabel(project.status))),
                   ),
                   const SizedBox(height: 6),
                   Text(
@@ -2147,7 +2329,7 @@ class PartnerPerformancePage extends StatelessWidget {
         ...partners.map(
           (ImplementationPartnerSummary partner) => Card(
             child: Padding(
-              padding: const EdgeInsets.all(18),
+              padding: EdgeInsets.all(_isCompactWidth(context) ? 16 : 18),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -2407,15 +2589,24 @@ class _DataEntryPageState extends State<DataEntryPage> {
 }
 
 class HeaderChip extends StatelessWidget {
-  const HeaderChip({required this.label, required this.value, super.key});
+  const HeaderChip({
+    required this.label,
+    required this.value,
+    this.compact = false,
+    super.key,
+  });
 
   final String label;
   final String value;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? 10 : 12,
+        vertical: compact ? 8 : 10,
+      ),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.12),
         borderRadius: BorderRadius.circular(14),
@@ -2423,17 +2614,43 @@ class HeaderChip extends StatelessWidget {
       ),
       child: RichText(
         text: TextSpan(
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: Colors.white, fontSize: compact ? 12 : 14),
           children: [
             TextSpan(
               text: '$label: ',
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.w700,
                 color: Colors.white70,
+                fontSize: compact ? 12 : 14,
               ),
             ),
             TextSpan(text: value),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ThemeBadge extends StatelessWidget {
+  const _ThemeBadge({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white24),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );
@@ -2456,25 +2673,25 @@ class SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final compact = _isCompactWidth(context);
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(compact ? 14 : 16),
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(compact ? 18 : 20),
       ),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.white),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
+      child: compact
+          ? Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Icon(icon, color: Colors.white, size: 20),
+                const SizedBox(height: 10),
                 Text(
                   title,
                   style: const TextStyle(
                     color: Colors.white70,
                     fontWeight: FontWeight.w600,
+                    fontSize: 12,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -2482,15 +2699,41 @@ class SummaryCard extends StatelessWidget {
                   value,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 20,
+                    fontSize: 18,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
               ],
+            )
+          : Row(
+              children: [
+                Icon(icon, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        value,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -2503,25 +2746,42 @@ class MetricPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final compact = _isCompactWidth(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? 10 : 12,
+        vertical: compact ? 8 : 10,
+      ),
       decoration: BoxDecoration(
         color: const Color(0xFFF1F5F3),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(compact ? 12 : 14),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
-            style: const TextStyle(fontSize: 12, color: Colors.black54),
+            style: TextStyle(
+              fontSize: compact ? 11 : 12,
+              color: Colors.black54,
+            ),
           ),
           const SizedBox(height: 4),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w700)),
+          Text(
+            value,
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: compact ? 13 : 14,
+            ),
+          ),
         ],
       ),
     );
   }
+}
+
+bool _isCompactWidth(BuildContext context) {
+  return MediaQuery.of(context).size.width < 600;
 }
 
 String verticalLabel(EntryVertical vertical) {
