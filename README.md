@@ -1,17 +1,28 @@
-# isc_sanitation_platform
+# ISC Sanitation Platform
 
-A new Flutter project.
+Flutter application for a unified India Sanitation Coalition platform that supports ISC teams, CSR organizations, and government agencies through a shared block-level sanitation dashboard.
 
-## Getting Started
+## Modules
 
-This project is a starting point for a Flutter application.
+- Overview dashboard
+- Block-level view
+- Implementation partner view
+- Funding gap analysis
+- Project and activity tracker
+- Reports and export summary
+- User and role management
+- Partner performance dashboard
+- Data entry for sanitation verticals
 
-A few resources to get you started if this is your first Flutter project:
+## Run
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+```bash
+flutter pub get
+flutter run -d chrome
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Demo Login
+
+- `isc_admin / isc123`
+- `csr_funder / csr123`
+- `gov_officer / gov123`
