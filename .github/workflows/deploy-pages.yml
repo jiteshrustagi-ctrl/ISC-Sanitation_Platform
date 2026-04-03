@@ -37,7 +37,7 @@ jobs:
         run: flutter test
 
       - name: Build web app
-        run: flutter build web --release --base-href "/${{ github.event.repository.name }}/"
+        run: flutter build web --release --pwa-strategy=none --base-href "/${{ github.event.repository.name }}/"
 
       - name: Add SPA fallback
         run: cp build/web/index.html build/web/404.html
